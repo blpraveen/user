@@ -43,10 +43,10 @@ class Handler extends ExceptionHandler
      * @param  \Exception  $exception
      * @return \Illuminate\Http\Response
      */
-   /* public function render($request, Throwable  $exception)
+   public function render($request, Throwable  $exception)
     {
        return $this->handleApiException($request, $exception);
-    }*/
+    }
 
     private function handleApiException($request, Throwable  $exception)
     {

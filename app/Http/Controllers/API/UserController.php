@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Http\Requests\UserUpdate;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use App\Services\UserService;
 use Validator;
 use Auth;
 use DB;
@@ -14,7 +15,13 @@ class UserController extends Controller
    
  
  
-    
+    protected $userservice;
+
+    public function __construct(UserService $userservice)
+    {
+        $this->authorizeResource(User::class, 'user');
+        $this->userservice = $userservice;
+    }
 
     /**
      * Display a listing of the resource.
@@ -43,23 +50,9 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(User $user)
     {
-        \DB::beginTransaction();
          try {  
-             if(empty($id)){
-                return response()->json([
-                    "success" => false,
-                    "message" => "ID is required."
-                ]); 
-             }
-             $user = User::find($id);
-             if(empty($user)){
-                return response()->json([
-                    "success" => false,
-                    "message" => "User does not exists."
-                ]); 
-             }
               return response()->json([
                  "success" => true,
                  "message" => "User Retrieve Successfully.",
@@ -67,7 +60,6 @@ class UserController extends Controller
               ]);
                  
         } catch (\Exception $e) {
-            \DB::rollback();
             return response()->json([
              "success" => false,
              "message" => "Server Error.",
@@ -82,28 +74,18 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(UserUpdate $request,$id)
+    public function update(UserUpdate $request,User $user)
     {
-        \DB::beginTransaction();
         try {  
 
             $data = $request->validated();
-            $user = User::find($id);
-            if(empty($user)){
-                return response()->json([
-                    "success" => false,
-                    "message" => "User does not exists."
-                ]); 
-            }
-            User::where('id',$id)->update($data);
-            \DB::commit();
+            $user = $this->userservice->update($request, $user->id);
             return response()->json([
                  "success" => true,
                  "message" => "Updated Successfully.",
-                 "data" => new UserResource($user)
               ]);
         } catch (\Exception $e) {
-            \DB::rollback();
+           
             return response()->json([
              "success" => false,
              "message" => "Server Error.",
@@ -117,25 +99,18 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        \DB::beginTransaction();
+        
         try {  
-            $user = User::find($id);
-            if(empty($user)){
-                return response()->json([
-                    "success" => false,
-                    "message" => "User does not exists."
-                ]); 
-            }
-            $user->delete();
-            \DB::commit();
+            $this->userservice->delete($user->id);
+            
             return response()->json([
                  "success" => true,
                  "message" => "Deleted Successfully.",
               ]);
         } catch (\Exception $e) {
-            \DB::rollback();
+           
             return response()->json([
              "success" => false,
              "message" => "Server Error.",
